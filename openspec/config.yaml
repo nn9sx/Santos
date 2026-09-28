@@ -1,32 +1,37 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Name: Santos
+  Pitch: a new project idea grounded in neighbor GitHub repos. Name those repos in the pitch.
+  The user rates pitches. A rating changes the Gaussian noise used on the next run.
+  Interface: CLI. Modes are flags. pull is the default.
+  Stack: Python, SQLite, nomic-ai/nomic-embed-text-v1.5
+  Corpus: READMEs, about 1–10k repos, stored locally.
+  GitHub Search runs while building that index, and again on refresh (a command or a schedule).
+  Pace searches at most 25 requests per minute and honor rate-limit headers.
+  Embed each README with the search_document: prefix at the full 8192-token window (tokenizer model_max_length=8192 and dynamic RoPE). Mean-pool, layer-norm, keep all 768 dimensions, and store that vector. Do not L2-normalize and do not Matryoshka-truncate. Add Gaussian noise in that space; where the noise is centered depends on the mode. Retrieve neighbors by Euclidean distance and pitch from them.
+  Render a template pitch by default. --expand may call Ollama or OpenAI and stays off unless passed.
+  Modes:
+    pull (default): get a pitch
+    topic: pull clustered to a topic
+    mood: one of absurd, useful, weekend
+    sparse: pull from a low-density region
+    near: pull adjacent to a known project
+    mix: a power-user blend of pulls
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Tie features directly to user impact
+    - Always include a "Success Criteria" section
+    - Improve from ratings: the user rates pitches, and a rating changes the Gaussian noise on the next run
+  tasks:
+    - Break tasks into chunks of max 2 hours
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - Follow the TDD pattern: test, code, refactor (red, green, blue)
+  archive:
+    guidance:
+      - Summarize the archive outcome before finishing
