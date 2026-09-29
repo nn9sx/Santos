@@ -2,7 +2,7 @@
 
 ## 1. Package
 
-- [ ] 1.1 Add a Python package that installs a `santos` console script and pytest, and verify `python -m pytest` exits 0 with no failures.
+- [ ] 1.1 Add a Santos Python package that installs a `pitch-flap` console script and pytest, and verify `python -m pytest` exits 0 with no failures.
 
 ## 2. Search index and store
 
@@ -18,13 +18,13 @@
 
 ## 4. Refresh command
 
-- [ ] 4.1 Write a failing test that `santos refresh` against a fake index and fake GitHub API fills the temporary store and prints no pitch. Implement the command, then verify the test passes.
+- [ ] 4.1 Write a failing test that `pitch-flap refresh` against a fake index and fake GitHub API fills the temporary store and prints no pitch. Implement the command, then verify the test passes.
 - [ ] 4.2 Write a failing test that a refresh stopped with rows still `pending`, run again, keeps README text already stored and finishes the active set. Implement resume, then verify the test passes.
 - [ ] 4.3 Write a failing test that a second refresh replaces README text when GitHub returns a new body. Implement that revalidation, then verify the test passes.
 
 ## 5. Project context
 
-- [ ] 5.1 Update `AGENTS.md` and `openspec/config.yaml` together so corpus membership is `https://www.gitstarclub.com/search-index`, README fetches honor GitHub core rate-limit headers, and the 25-requests-per-minute cap stays on GitHub Search. Verify both files state that same rule.
+- [ ] 5.1 Update `AGENTS.md` and `openspec/config.yaml` together so the product and CLI are pitch-flap, the repo and project stay Santos, corpus membership is `https://www.gitstarclub.com/search-index`, README fetches honor GitHub core rate-limit headers, and the 25-requests-per-minute cap stays on GitHub Search. Verify both files state those same rules.
 
 ## 6. Integration
 
