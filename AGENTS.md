@@ -4,7 +4,9 @@ This repo is greenfield. Product facts below are decided. Use them. Ask Andres o
 
 ## Product
 
-Santos is a CLI that pitches a new project idea grounded in neighboring GitHub READMEs, and names those repos in the pitch.
+The repo and project stay Santos. The product and CLI are pitch-flap.
+
+pitch-flap pitches a new project idea grounded in neighboring GitHub READMEs, and names those repos in the pitch.
 
 The user rates pitches. A rating changes the Gaussian noise used on the next run.
 
@@ -19,7 +21,7 @@ Modes are flags. `pull` is the default.
 
 Stack: Python, SQLite, Hugging Face `nomic-ai/nomic-embed-text-v1.5`.
 
-The corpus is local: READMEs for about 1–10k repos. GitHub Search runs while building that index and again on refresh (a command or a schedule). Pace searches at most 25 requests per minute and honor rate-limit headers.
+The corpus is local: READMEs for about 1–10k repos. Corpus membership is a download of `https://www.gitstarclub.com/search-index`. README fetches honor GitHub core rate-limit headers. GitHub Search stays at most 25 requests per minute and honors rate-limit headers.
 
 Render a template pitch by default. `--expand` may call Ollama or OpenAI and stays off unless the user passes it.
 

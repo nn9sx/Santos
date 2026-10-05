@@ -2,13 +2,15 @@ schema: spec-driven
 
 context: |
   Name: Santos
+  The repo and project stay Santos. The product and CLI are pitch-flap.
   Pitch: a new project idea grounded in neighbor GitHub repos. Name those repos in the pitch.
   The user rates pitches. A rating changes the Gaussian noise used on the next run.
   Interface: CLI. Modes are flags. pull is the default.
   Stack: Python, SQLite, nomic-ai/nomic-embed-text-v1.5
   Corpus: READMEs, about 1–10k repos, stored locally.
-  GitHub Search runs while building that index, and again on refresh (a command or a schedule).
-  Pace searches at most 25 requests per minute and honor rate-limit headers.
+  Corpus membership is a download of https://www.gitstarclub.com/search-index.
+  README fetches honor GitHub core rate-limit headers.
+  GitHub Search stays at most 25 requests per minute and honors rate-limit headers.
   Embed each README with the search_document: prefix at the full 8192-token window (tokenizer model_max_length=8192 and dynamic RoPE). Mean-pool, layer-norm, keep all 768 dimensions, and store that vector. Do not L2-normalize and do not Matryoshka-truncate. Add Gaussian noise in that space; where the noise is centered depends on the mode. Retrieve neighbors by Euclidean distance and pitch from them.
   Render a template pitch by default. --expand may call Ollama or OpenAI and stays off unless passed.
   Modes:
