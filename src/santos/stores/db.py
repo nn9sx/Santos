@@ -21,8 +21,7 @@ metadata = MetaData()
 
 
 def _unwrap(annotation):
-    if get_origin(annotation) is Annotated:
-        return _unwrap(get_args(annotation)[0])
+    if get_origin(annotation) is Annotated: return _unwrap(get_args(annotation)[0])
     return annotation
 
 
@@ -35,8 +34,7 @@ def _optional(annotation):
 
 def _inner(annotation):
     optional = _optional(annotation)
-    if optional is None:
-        return _unwrap(annotation)
+    if optional is None: return _unwrap(annotation)
     return _unwrap(optional)
 
 
