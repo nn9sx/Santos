@@ -1,23 +1,22 @@
 """Santos: the pitch-flap project."""
 
-import argparse
-import dotenv
-import os
 import sys
+from argparse import ArgumentParser
+from dotenv import load_dotenv
+from os import environ
 from pathlib import Path
 
-dotenv.load_dotenv()
+load_dotenv()
 CLI_NAME = "pitch-flap"
-XDG_DATA_HOME = os.environ.get("XDG_DATA_HOME", "")
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+XDG_DATA_HOME = environ.get("XDG_DATA_HOME", "")
+GITHUB_TOKEN = environ.get("GITHUB_TOKEN", "")
 
 from santos.cli import Refresh
 from santos.clients.http import http_fetch
 
 
 def main(argv: list[str] | None = None) -> int:
-    dotenv.load_dotenv()
-    parser = argparse.ArgumentParser(prog=CLI_NAME)
+    parser = ArgumentParser(prog=CLI_NAME)
     parser.add_argument("command")
     args = parser.parse_args(argv)
     COMMANDS = { "refresh": Refresh }

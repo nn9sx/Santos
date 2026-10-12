@@ -1,48 +1,14 @@
 from pathlib import Path
-
-from sqlalchemy import (
-    Column,
-    Integer,
-    MetaData,
-    Table,
-    Text,
-    case,
-    create_engine,
-    select,
-    update,
-)
+from sqlalchemy import case, select, update
 from sqlalchemy.dialects.sqlite import insert
 
 from santos.models.index import ActiveRepo, active_repos
-
-metadata = MetaData()
-repos = Table(
-    "repos",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("full_name", Text, nullable=False),
-    Column("owner", Text),
-    Column("language", Text),
-    Column("current_stars", Integer),
-    Column("description", Text),
-    Column("tracked_since", Text),
-    Column("active", Integer, nullable=False),
-    Column("readme_text", Text),
-    Column("readme_state", Text, nullable=False),
-    Column("etag", Text),
-)
-
-
-def _engine(db_path: Path):
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(f"sqlite:///{db_path}")
-    metadata.create_all(engine)
-    return engine
+from santos.stores.db import engine, repos
 
 
 def load_membership(db_path: Path, document: object) -> list[ActiveRepo]:
     parsed = active_repos(document)
-    with _engine(db_path).begin() as conn:
+    with engine(db_path).begin() as conn:
         for repo in parsed:
             stmt = insert(repos).values(
                 id=repo.id,
@@ -52,7 +18,7 @@ def load_membership(db_path: Path, document: object) -> list[ActiveRepo]:
                 current_stars=repo.current_stars,
                 description=repo.description,
                 tracked_since=repo.tracked_since,
-                active=1,
+                active=True,
                 readme_text=None,
                 readme_state="pending",
                 etag=None,
@@ -68,9 +34,9 @@ def load_membership(db_path: Path, document: object) -> list[ActiveRepo]:
                         "current_stars": excluded.current_stars,
                         "description": excluded.description,
                         "tracked_since": excluded.tracked_since,
-                        "active": 1,
+                        "active": True,
                         "readme_state": case(
-                            (repos.c.active == 0, "pending"),
+                            (repos.c.active == False, "pending"),
                             else_=repos.c.readme_state,
                         ),
                     },
@@ -80,10 +46,10 @@ def load_membership(db_path: Path, document: object) -> list[ActiveRepo]:
             conn.execute(
                 update(repos)
                 .where(repos.c.id.not_in([repo.id for repo in parsed]))
-                .values(active=0)
+                .values(active=False)
             )
         else:
-            conn.execute(update(repos).values(active=0))
+            conn.execute(update(repos).values(active=False))
     return parsed
 
 
@@ -96,10 +62,10 @@ def active_readme_targets(db_path: Path) -> list[dict]:
             repos.c.readme_state,
             repos.c.etag,
         )
-        .where(repos.c.active == 1)
+        .where(repos.c.active == True)
         .order_by(repos.c.id)
     )
-    with _engine(db_path).connect() as conn:
+    with engine(db_path).connect() as conn:
         return [dict(row) for row in conn.execute(stmt).mappings()]
 
 
@@ -111,7 +77,7 @@ def record_readme(
     state: str,
     etag: str | None,
 ) -> None:
-    with _engine(db_path).begin() as conn:
+    with engine(db_path).begin() as conn:
         conn.execute(
             update(repos)
             .where(repos.c.id == repo_id)
@@ -120,7 +86,7 @@ def record_readme(
 
 
 def mark_readme_error(db_path: Path, repo_id: int) -> None:
-    with _engine(db_path).begin() as conn:
+    with engine(db_path).begin() as conn:
         conn.execute(
             update(repos).where(repos.c.id == repo_id).values(readme_state="error")
         )

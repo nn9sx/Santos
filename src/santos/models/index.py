@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 
 
 class IndexDownloadError(Exception):
@@ -13,7 +14,7 @@ class ActiveRepo:
     language: str | None
     current_stars: int | None
     description: str | None
-    tracked_since: str | None
+    tracked_since: date | None
 
 
 def _optional_str(repo: dict, key: str) -> str | None:
@@ -23,6 +24,18 @@ def _optional_str(repo: dict, key: str) -> str | None:
     if not isinstance(value, str):
         raise IndexDownloadError(f"active repo {key} is not a string")
     return value
+
+
+def _optional_date(repo: dict, key: str) -> date | None:
+    value = repo.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise IndexDownloadError(f"active repo {key} is not a date")
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise IndexDownloadError(f"active repo {key} is not a date") from exc
 
 
 def _optional_int(repo: dict, key: str) -> int | None:
@@ -70,7 +83,7 @@ def active_repos(document: object) -> list[ActiveRepo]:
                 language=_optional_str(repo, "language"),
                 current_stars=_optional_int(repo, "current_stars"),
                 description=_optional_str(repo, "description"),
-                tracked_since=_optional_str(repo, "tracked_since"),
+                tracked_since=_optional_date(repo, "tracked_since"),
             )
         )
     return active

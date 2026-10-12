@@ -134,7 +134,7 @@ def test_exhausted_rate_limit_waits_until_reset(tmp_path):
 def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypatch, capsys):
     data_home = tmp_path / "share"
     monkeypatch.setattr("santos.XDG_DATA_HOME", str(data_home))
-    monkeypatch.setattr("santos.dotenv.load_dotenv", lambda: None)
+    monkeypatch.setattr("santos.load_dotenv", lambda: None)
     calls = []
     monkeypatch.setattr(
         "santos.http_fetch",

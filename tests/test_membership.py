@@ -86,6 +86,19 @@ def test_count_mismatch_leaves_database_bytes_unchanged(tmp_path):
     assert db.read_bytes() == before
 
 
+def test_bad_tracked_since_leaves_database_bytes_unchanged(tmp_path):
+    db = tmp_path / "corpus.db"
+    load_membership(db, _valid_document())
+    before = db.read_bytes()
+
+    bad = _valid_document()
+    bad["repos"][0]["tracked_since"] = "not-a-date"
+    with pytest.raises(IndexDownloadError):
+        load_membership(db, bad)
+
+    assert db.read_bytes() == before
+
+
 def test_download_failure_does_not_create_or_change_the_database(tmp_path):
     missing = tmp_path / "missing.db"
     with pytest.raises(IndexDownloadError):
