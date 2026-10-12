@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from dotenv import load_dotenv
 from pathlib import Path
 
 from santos.http import http_fetch
@@ -16,6 +17,7 @@ def corpus_db_path() -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv()
     parser = argparse.ArgumentParser(prog="pitch-flap")
     parser.add_argument("command")
     args = parser.parse_args(argv)
