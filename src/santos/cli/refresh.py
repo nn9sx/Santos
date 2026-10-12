@@ -26,13 +26,9 @@ class Refresh(Command):
                 INDEX_URL,
                 {"User-Agent": "pitch-flap", "Accept": "application/json"},
             )
+            if response.status != 200: raise Exception()
+            document = json.loads(response.body.decode("utf-8"))
         except Exception as exc:
             raise IndexDownloadError("search index download failed") from exc
-        if getattr(response, "status", None) != 200:
-            raise IndexDownloadError("search index download failed")
-        try:
-            document = json.loads(response.body.decode("utf-8"))
-        except (AttributeError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise IndexDownloadError("search index is not JSON") from exc
         load_membership(self.db_path, document)
         fetch_readmes(self.db_path, self.token, self.fetch, self.sleep, self.now)

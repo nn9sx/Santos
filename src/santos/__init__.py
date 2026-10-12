@@ -27,7 +27,7 @@ def main(argv: list[str] | None = None) -> int:
             db_path=(Path(XDG_DATA_HOME) if XDG_DATA_HOME else Path.home() / ".local" / "share") / CLI_NAME / "corpus.db",
             fetch=http_fetch
         )()
-    except Exception as exception:
-        print(f"Error: {exception}", file=sys.stderr)
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         return 1
     return 0
