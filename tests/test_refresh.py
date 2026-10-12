@@ -3,7 +3,7 @@ import sqlite3
 
 import pytest
 
-from santos.cli import main
+from santos import main
 from santos.cli.refresh import INDEX_URL
 
 
@@ -53,7 +53,7 @@ def test_refresh_fills_store_and_prints_no_pitch(tmp_path, monkeypatch, capsys):
         assert headers["Authorization"] == "Bearer secret"
         return Response(200, {"etag": '"one"'}, b"# alice")
 
-    monkeypatch.setattr("santos.cli.http_fetch", fetch)
+    monkeypatch.setattr("santos.http_fetch", fetch)
     assert main(["refresh"]) == 0
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -113,7 +113,7 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
             return Response(200, {"etag": '"bob"'}, b"# bob")
         raise AssertionError(url)
 
-    monkeypatch.setattr("santos.cli.http_fetch", fetch)
+    monkeypatch.setattr("santos.http_fetch", fetch)
     with pytest.raises(KeyboardInterrupt):
         main(["refresh"])
 
@@ -145,7 +145,7 @@ def test_second_refresh_replaces_readme_text(tmp_path, monkeypatch):
         conditional.append(headers.get("If-None-Match"))
         return Response(200, {"etag": '"next"'}, body["value"])
 
-    monkeypatch.setattr("santos.cli.http_fetch", fetch)
+    monkeypatch.setattr("santos.http_fetch", fetch)
     assert main(["refresh"]) == 0
     body["value"] = b"# new"
     assert main(["refresh"]) == 0

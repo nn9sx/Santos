@@ -9,7 +9,7 @@ dependencies = ["python-dotenv"]
 dev = ["pytest>=8"]
 
 [project.scripts]
-pitch-flap = "santos.cli:main"
+pitch-flap = "santos:main"
 
 [build-system]
 requires = ["setuptools>=68"]
