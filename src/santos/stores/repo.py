@@ -2,11 +2,11 @@ from pathlib import Path
 from sqlalchemy import case, select, update
 from sqlalchemy.dialects.sqlite import insert
 
-from santos.models.index import ActiveRepo, ReadmeState, Repo, active_repos
+from santos.models.index import Stub, ReadmeState, Repo, active_repos
 from santos.stores.db import engine, repos
 
 
-def load_membership(db_path: Path, document: object) -> list[ActiveRepo]:
+def load_membership(db_path: Path, document: object) -> list[Stub]:
     parsed = active_repos(document)
     with engine(db_path).begin() as conn:
         for repo in parsed:
