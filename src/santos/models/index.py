@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
+from typing import ClassVar
 
 
 class IndexDownloadError(Exception):
@@ -15,6 +17,22 @@ class ActiveRepo:
     current_stars: int | None
     description: str | None
     tracked_since: date | None
+
+
+class ReadmeState(StrEnum):
+    PENDING = "pending"
+    PRESENT = "present"
+    MISSING = "missing"
+    ERROR = "error"
+
+
+@dataclass(frozen=True)
+class Repo(ActiveRepo):
+    table_name: ClassVar[str] = "repos"
+    active: bool
+    readme_text: str | None
+    readme_state: ReadmeState
+    etag: str | None
 
 
 def _optional_str(repo: dict, key: str) -> str | None:

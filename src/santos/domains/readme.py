@@ -1,8 +1,8 @@
 from urllib.parse import quote
 
 from santos.clients.http import header, text
-from santos.models.repo import ReadmeState
-from santos.stores.repo import active_readme_targets, mark_readme_error, record_readme
+from santos.models.index import ReadmeState
+from santos.stores.repo import active_targets, mark_readme_error, record_readme
 
 README_ATTEMPTS = 3
 SHORT_WAIT_SECONDS = 1
@@ -20,7 +20,7 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
 
 
 def fetch_readmes(db_path, token: str, fetch, sleep, now) -> None:
-    for row in active_readme_targets(db_path):
+    for row in active_targets(db_path):
         owner, repo = row.full_name.split("/", 1)
         url = ("https://api.github.com/repos/"f"{quote(owner, safe='')}/{quote(repo, safe='')}/readme")
         headers = _readme_headers(token, row.etag if row.readme_state in (ReadmeState.PRESENT, ReadmeState.MISSING) and row.etag else None)

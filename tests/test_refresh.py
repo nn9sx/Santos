@@ -5,7 +5,7 @@ import pytest
 
 from santos import main
 from santos.cli.refresh import INDEX_URL
-from santos.models.repo import ReadmeState
+from santos.models.index import ReadmeState
 
 
 class Response:

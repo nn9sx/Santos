@@ -15,7 +15,7 @@ from sqlalchemy import (
 from types import NoneType, UnionType
 from typing import get_args, get_origin
 
-from santos.models.repo import ReadmeState, Repo
+from santos.models.index import ReadmeState, Repo
 
 metadata = MetaData()
 

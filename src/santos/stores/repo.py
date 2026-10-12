@@ -2,8 +2,7 @@ from pathlib import Path
 from sqlalchemy import case, select, update
 from sqlalchemy.dialects.sqlite import insert
 
-from santos.models.index import ActiveRepo, active_repos
-from santos.models.repo import ReadmeState, Repo
+from santos.models.index import ActiveRepo, ReadmeState, Repo, active_repos
 from santos.stores.db import engine, repos
 
 
@@ -70,7 +69,7 @@ def _stored(row) -> Repo:
     )
 
 
-def active_readme_targets(db_path: Path) -> list[Repo]:
+def active_targets(db_path: Path) -> list[Repo]:
     stmt = (
         select(repos)
         .where(repos.c.active == True)

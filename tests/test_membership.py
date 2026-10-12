@@ -2,8 +2,7 @@ import sqlite3
 
 import pytest
 
-from santos.models.index import IndexDownloadError
-from santos.models.repo import ReadmeState
+from santos.models.index import IndexDownloadError, ReadmeState
 from santos.stores.repo import load_membership
 
 
