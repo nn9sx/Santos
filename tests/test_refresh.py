@@ -157,3 +157,23 @@ def test_second_refresh_replaces_readme_text(tmp_path, monkeypatch):
     assert conditional == [None, '"next"']
 
 
+def test_refresh_and_another_command_are_callable():
+    from santos.cli.command import Command
+    from santos.cli import Refresh
+
+    class NeighborPitch(Command):
+        def __init__(self) -> None:
+            self.called = False
+
+        def __call__(self) -> None:
+            self.called = True
+
+    refresh = Refresh(token="token", db_path="corpus.db", fetch=lambda *_args: None)
+    pitch = NeighborPitch()
+    pitch()
+
+    assert isinstance(refresh, Command)
+    assert isinstance(pitch, Command)
+    assert pitch.called
+
+

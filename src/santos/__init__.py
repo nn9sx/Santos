@@ -4,10 +4,9 @@ import argparse
 import os
 import sys
 from pathlib import Path
-
 from dotenv import load_dotenv
 
-from santos.cli.refresh import refresh
+from santos.cli import Refresh
 from santos.clients.http import http_fetch
 from santos.domains.readme import AuthError
 from santos.models.index import IndexDownloadError
@@ -31,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
         print("A GitHub token is required.", file=sys.stderr)
         return 1
     try:
-        refresh(token=token, db_path=corpus_db_path(), fetch=http_fetch)
+        Refresh(token=token, db_path=corpus_db_path(), fetch=http_fetch)()
     except IndexDownloadError:
         print("The search index could not be downloaded.", file=sys.stderr)
         return 1
