@@ -1,3 +1,4 @@
+from http import HTTPMethod
 from urllib.request import Request, urlopen
 
 
@@ -9,7 +10,7 @@ class HttpResponse:
 
 
 def http_fetch(url: str, headers: dict[str, str]) -> HttpResponse:
-    request = Request(url, headers=headers, method="GET")
+    request = Request(url, headers=headers, method=HTTPMethod.GET)
     try:
         with urlopen(request) as response:
             return HttpResponse(

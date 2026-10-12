@@ -1,5 +1,6 @@
 import json
 import time
+from http import HTTPStatus
 
 from santos import GITHUB_TOKEN
 from santos.cli.command import Command
@@ -26,7 +27,7 @@ class Refresh(Command):
                 INDEX_URL,
                 {"User-Agent": "pitch-flap", "Accept": "application/json"},
             )
-            if response.status != 200: raise Exception()
+            if response.status != HTTPStatus.OK: raise
             document = json.loads(response.body.decode("utf-8"))
         except Exception as exc:
             raise IndexDownloadError("search index download failed") from exc
