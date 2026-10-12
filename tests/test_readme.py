@@ -4,6 +4,7 @@ import pytest
 
 from santos import main
 from santos.domains.readme import fetch_readmes
+from santos.models.repo import ReadmeState
 from santos.stores.repo import load_membership
 
 
@@ -59,7 +60,7 @@ def test_readme_outcomes_store_text_mark_missing_and_keep_304(tmp_path):
             SET readme_text = ?, readme_state = ?, etag = ?
             WHERE id = 3
             """,
-            ("kept readme", "present", '"old"'),
+            ("kept readme", ReadmeState.PRESENT, '"old"'),
         )
 
     seen = []
@@ -78,12 +79,12 @@ def test_readme_outcomes_store_text_mark_missing_and_keep_304(tmp_path):
 
     rows = _rows(db)
     assert rows[1]["readme_text"] == "# one"
-    assert rows[1]["readme_state"] == "present"
+    assert rows[1]["readme_state"] == ReadmeState.PRESENT
     assert rows[1]["etag"] == '"one"'
     assert rows[2]["readme_text"] is None
-    assert rows[2]["readme_state"] == "missing"
+    assert rows[2]["readme_state"] == ReadmeState.MISSING
     assert rows[3]["readme_text"] == "kept readme"
-    assert rows[3]["readme_state"] == "present"
+    assert rows[3]["readme_state"] == ReadmeState.PRESENT
     assert [url for url, _headers in seen] == [
         "https://api.github.com/repos/alice/one/readme",
         "https://api.github.com/repos/bob/two/readme",
@@ -173,10 +174,10 @@ def test_401_stops_and_keeps_rows_already_stored(tmp_path):
 
     rows = _rows(db)
     assert rows[1]["readme_text"] == "# one"
-    assert rows[1]["readme_state"] == "present"
-    assert rows[2]["readme_state"] == "pending"
+    assert rows[1]["readme_state"] == ReadmeState.PRESENT
+    assert rows[2]["readme_state"] == ReadmeState.PENDING
     assert rows[2]["readme_text"] is None
-    assert rows[3]["readme_state"] == "pending"
+    assert rows[3]["readme_state"] == ReadmeState.PENDING
     assert fetched == [
         "https://api.github.com/repos/alice/one/readme",
         "https://api.github.com/repos/bob/two/readme",
@@ -198,7 +199,7 @@ def test_repeated_non_auth_failure_marks_error_and_continues(tmp_path):
 
     rows = _rows(db)
     assert attempts == ["https://api.github.com/repos/alice/one/readme"] * 3
-    assert rows[1]["readme_state"] == "error"
+    assert rows[1]["readme_state"] == ReadmeState.ERROR
     assert rows[2]["readme_text"] == "# two"
-    assert rows[2]["readme_state"] == "present"
+    assert rows[2]["readme_state"] == ReadmeState.PRESENT
 

@@ -5,6 +5,7 @@ import pytest
 
 from santos import main
 from santos.cli.refresh import INDEX_URL
+from santos.models.repo import ReadmeState
 
 
 class Response:
@@ -63,7 +64,7 @@ def test_refresh_fills_store_and_prints_no_pitch(tmp_path, monkeypatch, capsys):
         rows = conn.execute(
             "SELECT id, full_name, active, readme_text, readme_state FROM repos ORDER BY id"
         ).fetchall()
-    assert rows == [(1, "alice/one", 1, "# alice", "present")]
+    assert rows == [(1, "alice/one", 1, "# alice", ReadmeState.PRESENT)]
 
 
 def _two_active():
@@ -122,7 +123,7 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
         after_stop = conn.execute(
             "SELECT id, readme_text, readme_state FROM repos ORDER BY id"
         ).fetchall()
-    assert after_stop == [(1, "# alice", "present"), (2, None, "pending")]
+    assert after_stop == [(1, "# alice", ReadmeState.PRESENT), (2, None, ReadmeState.PENDING)]
 
     stopped["value"] = False
     assert main(["refresh"]) == 0
@@ -130,7 +131,7 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
         finished = conn.execute(
             "SELECT id, readme_text, readme_state FROM repos ORDER BY id"
         ).fetchall()
-    assert finished == [(1, "# alice", "present"), (2, "# bob", "present")]
+    assert finished == [(1, "# alice", ReadmeState.PRESENT), (2, "# bob", ReadmeState.PRESENT)]
 
 
 def test_second_refresh_replaces_readme_text(tmp_path, monkeypatch):

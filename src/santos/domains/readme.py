@@ -1,6 +1,7 @@
 from urllib.parse import quote
 
 from santos.clients.http import header, text
+from santos.models.repo import ReadmeState
 from santos.stores.repo import active_readme_targets, mark_readme_error, record_readme
 
 README_ATTEMPTS = 3
@@ -20,14 +21,17 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
 
 def fetch_readmes(db_path, token: str, fetch, sleep, now) -> None:
     for row in active_readme_targets(db_path):
-        owner, repo = row["full_name"].split("/", 1)
+        owner, repo = row.full_name.split("/", 1)
         url = (
             "https://api.github.com/repos/"
             f"{quote(owner, safe='')}/{quote(repo, safe='')}/readme"
         )
-        headers = _readme_headers(token, row["etag"] if row["readme_state"] in ("present", "missing") and row["etag"] else None)
+        headers = _readme_headers(
+            token,
+            row.etag if row.readme_state in (ReadmeState.PRESENT, ReadmeState.MISSING) and row.etag else None,
+        )
         response = _fetch_with_retries(url, headers, fetch, sleep, now)
-        _apply_readme(db_path, row["id"], response)
+        _apply_readme(db_path, row.id, response)
         _wait_if_exhausted(response, sleep, now)
 
 
@@ -88,12 +92,12 @@ def _apply_readme(db_path, repo_id: int, response) -> None:
     if response.status == 304:
         return
     if response.status == 404:
-        record_readme(db_path, repo_id, text=None, state="missing", etag=None)
+        record_readme(db_path, repo_id, text=None, state=ReadmeState.MISSING, etag=None)
         return
     record_readme(
         db_path,
         repo_id,
         text=text(response),
-        state="present",
+        state=ReadmeState.PRESENT,
         etag=header(response, "etag"),
     )

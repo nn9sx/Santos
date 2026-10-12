@@ -3,6 +3,7 @@ import sqlite3
 import pytest
 
 from santos.models.index import IndexDownloadError
+from santos.models.repo import ReadmeState
 from santos.stores.repo import load_membership
 
 
@@ -138,7 +139,7 @@ def test_absent_repo_is_inactive_and_keeps_readme_text(tmp_path):
     with sqlite3.connect(db) as conn:
         conn.execute(
             "UPDATE repos SET readme_text = ?, readme_state = ? WHERE id = ?",
-            ("stored readme", "present", 2),
+            ("stored readme", ReadmeState.PRESENT, 2),
         )
 
     load_membership(
