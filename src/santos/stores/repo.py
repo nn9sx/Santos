@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-from santos.index import ActiveRepo, active_repos
+from santos.models.index import ActiveRepo, active_repos
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS repos (

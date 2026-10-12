@@ -1,9 +1,9 @@
 import json
 import time
 
-from santos.index import IndexDownloadError
-from santos.readme import fetch_readmes
-from santos.store import load_membership
+from santos.models.index import IndexDownloadError
+from santos.domains.readme import fetch_readmes
+from santos.stores.repo import load_membership
 
 INDEX_URL = "https://www.gitstarclub.com/search-index"
 

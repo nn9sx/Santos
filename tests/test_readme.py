@@ -3,8 +3,8 @@ import sqlite3
 import pytest
 
 from santos.cli import main
-from santos.readme import AuthError, fetch_readmes
-from santos.store import load_membership
+from santos.domains.readme import AuthError, fetch_readmes
+from santos.stores.repo import load_membership
 
 
 def _index(*repos):
@@ -134,6 +134,7 @@ def test_exhausted_rate_limit_waits_until_reset(tmp_path):
 def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypatch, capsys):
     data_home = tmp_path / "share"
     monkeypatch.setenv("XDG_DATA_HOME", str(data_home))
+    monkeypatch.setattr("santos.cli.load_dotenv", lambda: None)
     calls = []
     monkeypatch.setattr(
         "santos.cli.http_fetch",

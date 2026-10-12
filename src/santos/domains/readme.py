@@ -1,6 +1,6 @@
 from urllib.parse import quote
 
-from santos.store import active_readme_targets, mark_readme_error, record_readme
+from santos.stores.repo import active_readme_targets, mark_readme_error, record_readme
 
 README_ATTEMPTS = 3
 SHORT_WAIT_SECONDS = 1

@@ -2,8 +2,8 @@ import sqlite3
 
 import pytest
 
-from santos.index import IndexDownloadError
-from santos.store import load_membership
+from santos.models.index import IndexDownloadError
+from santos.stores.repo import load_membership
 
 
 def test_active_rows_are_upserted_by_id_and_full_name(tmp_path):

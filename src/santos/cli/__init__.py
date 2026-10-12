@@ -1,13 +1,14 @@
 import argparse
 import os
 import sys
-from dotenv import load_dotenv
 from pathlib import Path
 
-from santos.http import http_fetch
-from santos.index import IndexDownloadError
-from santos.readme import AuthError
-from santos.refresh import refresh
+from dotenv import load_dotenv
+
+from santos.cli.refresh import refresh
+from santos.domains.readme import AuthError
+from santos.clients.http import http_fetch
+from santos.models.index import IndexDownloadError
 
 
 def corpus_db_path() -> Path:

@@ -4,7 +4,7 @@ import sqlite3
 import pytest
 
 from santos.cli import main
-from santos.refresh import INDEX_URL
+from santos.cli.refresh import INDEX_URL
 
 
 class Response:
