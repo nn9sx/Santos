@@ -1,40 +1,33 @@
 """Santos: the pitch-flap project."""
 
 import argparse
+import dotenv
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
+
+dotenv.load_dotenv()
+CLI_NAME = "pitch-flap"
+XDG_DATA_HOME = os.environ.get("XDG_DATA_HOME", "")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
 from santos.cli import Refresh
 from santos.clients.http import http_fetch
-from santos.domains.readme import AuthError
-from santos.models.index import IndexDownloadError
-
-
-def corpus_db_path() -> Path:
-    data_home = os.environ.get("XDG_DATA_HOME")
-    root = Path(data_home) if data_home else Path.home() / ".local" / "share"
-    return root / "pitch-flap" / "corpus.db"
 
 
 def main(argv: list[str] | None = None) -> int:
-    load_dotenv()
-    parser = argparse.ArgumentParser(prog="pitch-flap")
+    dotenv.load_dotenv()
+    parser = argparse.ArgumentParser(prog=CLI_NAME)
     parser.add_argument("command")
     args = parser.parse_args(argv)
-    if args.command != "refresh":
-        parser.error(f"unknown command {args.command}")
-    token = os.environ.get("GITHUB_TOKEN", "").strip()
-    if not token:
-        print("A GitHub token is required.", file=sys.stderr)
-        return 1
+    COMMANDS = { "refresh": Refresh }
+    if args.command not in COMMANDS: parser.error(f"unknown command {args.command}")
     try:
-        Refresh(token=token, db_path=corpus_db_path(), fetch=http_fetch)()
-    except IndexDownloadError:
-        print("The search index could not be downloaded.", file=sys.stderr)
-        return 1
-    except AuthError:
-        print("GitHub rejected the token.", file=sys.stderr)
+        COMMANDS[args.command](
+            db_path=(Path(XDG_DATA_HOME) if XDG_DATA_HOME else Path.home() / ".local" / "share") / CLI_NAME / "corpus.db",
+            fetch=http_fetch
+        )()
+    except Exception as exception:
+        print(f"Error: {exception}", file=sys.stderr)
         return 1
     return 0

@@ -43,8 +43,8 @@ def _document():
 
 
 def test_refresh_fills_store_and_prints_no_pitch(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("GITHUB_TOKEN", "secret")
-    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "secret")
+    monkeypatch.setattr("santos.XDG_DATA_HOME", str(tmp_path))
 
     def fetch(url, headers):
         if url == INDEX_URL:
@@ -95,8 +95,8 @@ def _two_active():
 
 
 def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatch):
-    monkeypatch.setenv("GITHUB_TOKEN", "secret")
-    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "secret")
+    monkeypatch.setattr("santos.XDG_DATA_HOME", str(tmp_path))
     stopped = {"value": True}
 
     def fetch(url, headers):
@@ -134,8 +134,8 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
 
 
 def test_second_refresh_replaces_readme_text(tmp_path, monkeypatch):
-    monkeypatch.setenv("GITHUB_TOKEN", "secret")
-    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "secret")
+    monkeypatch.setattr("santos.XDG_DATA_HOME", str(tmp_path))
     body = {"value": b"# old"}
     conditional = []
 
@@ -157,7 +157,7 @@ def test_second_refresh_replaces_readme_text(tmp_path, monkeypatch):
     assert conditional == [None, '"next"']
 
 
-def test_refresh_and_another_command_are_callable():
+def test_refresh_and_another_command_are_callable(monkeypatch):
     from santos.cli.command import Command
     from santos.cli import Refresh
 
@@ -168,7 +168,8 @@ def test_refresh_and_another_command_are_callable():
         def __call__(self) -> None:
             self.called = True
 
-    refresh = Refresh(token="token", db_path="corpus.db", fetch=lambda *_args: None)
+    monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "token")
+    refresh = Refresh(db_path="corpus.db", fetch=lambda *_args: None)
     pitch = NeighborPitch()
     pitch()
 

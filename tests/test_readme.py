@@ -133,8 +133,8 @@ def test_exhausted_rate_limit_waits_until_reset(tmp_path):
 
 def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypatch, capsys):
     data_home = tmp_path / "share"
-    monkeypatch.setenv("XDG_DATA_HOME", str(data_home))
-    monkeypatch.setattr("santos.load_dotenv", lambda: None)
+    monkeypatch.setattr("santos.XDG_DATA_HOME", str(data_home))
+    monkeypatch.setattr("santos.dotenv.load_dotenv", lambda: None)
     calls = []
     monkeypatch.setattr(
         "santos.http_fetch",
@@ -143,10 +143,7 @@ def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypat
 
     for token in (None, ""):
         calls.clear()
-        if token is None:
-            monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-        else:
-            monkeypatch.setenv("GITHUB_TOKEN", token)
+        monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "")
         code = main(["refresh"])
         assert code != 0
         assert calls == []
