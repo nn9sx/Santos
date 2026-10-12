@@ -3,7 +3,7 @@ import sqlite3
 import pytest
 
 from santos import main
-from santos.domains.readme import AuthError, fetch_readmes
+from santos.domains.readme import fetch_readmes
 from santos.stores.repo import load_membership
 
 
@@ -168,7 +168,7 @@ def test_401_stops_and_keeps_rows_already_stored(tmp_path):
             return Response(401, {}, b"")
         raise AssertionError(url)
 
-    with pytest.raises(AuthError):
+    with pytest.raises(Exception, match="GitHub rejected the token"):
         fetch_readmes(db, token="token", fetch=fetch, sleep=lambda _seconds: None, now=lambda: 0)
 
     rows = _rows(db)

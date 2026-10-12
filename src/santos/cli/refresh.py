@@ -14,8 +14,7 @@ INDEX_URL = "https://www.gitstarclub.com/search-index"
 class Refresh(Command):
     def __init__(self, *, db_path, fetch, sleep=None, now=None) -> None:
         self.token = GITHUB_TOKEN.strip()
-        if not self.token:
-            raise ValueError("GITHUB_TOKEN is required")
+        if not self.token: raise ValueError("GITHUB_TOKEN is required")
         self.db_path = db_path
         self.fetch = fetch
         self.sleep = time.sleep if sleep is None else sleep

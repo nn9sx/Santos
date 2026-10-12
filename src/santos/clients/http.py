@@ -9,6 +9,21 @@ class HttpResponse:
         self.body = body
 
 
+def header(response, name: str) -> str | None:
+    wanted = name.lower()
+    for key, value in response.headers.items():
+        if key.lower() == wanted:
+            return value
+    return None
+
+
+def text(response) -> str:
+    body = response.body
+    if isinstance(body, bytes):
+        return body.decode("utf-8", errors="replace")
+    return body
+
+
 def http_fetch(url: str, headers: dict[str, str]) -> HttpResponse:
     request = Request(url, headers=headers, method=HTTPMethod.GET)
     try:
@@ -20,8 +35,7 @@ def http_fetch(url: str, headers: dict[str, str]) -> HttpResponse:
             )
     except Exception as exc:
         status = getattr(exc, "code", None)
-        if status is None:
-            raise
+        if status is None: raise
         payload = exc.read() if hasattr(exc, "read") else b""
         header_items = getattr(getattr(exc, "headers", None), "items", lambda: [])()
         return HttpResponse(

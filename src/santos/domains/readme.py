@@ -1,21 +1,10 @@
 from urllib.parse import quote
 
+from santos.clients.http import header, text
 from santos.stores.repo import active_readme_targets, mark_readme_error, record_readme
 
 README_ATTEMPTS = 3
 SHORT_WAIT_SECONDS = 1
-
-
-class AuthError(Exception):
-    """GitHub rejected the token. Rows already stored stay as they are."""
-
-
-def _header(headers: dict, name: str) -> str | None:
-    wanted = name.lower()
-    for key, value in headers.items():
-        if key.lower() == wanted:
-            return value
-    return None
 
 
 def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
@@ -25,21 +14,8 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "pitch-flap",
     }
-    if etag:
-        headers["If-None-Match"] = etag
+    if etag: headers["If-None-Match"] = etag
     return headers
-
-
-def _text(body) -> str:
-    if isinstance(body, bytes):
-        return body.decode("utf-8", errors="replace")
-    return body
-
-
-def _conditional_etag(row: dict) -> str | None:
-    if row["readme_state"] in ("present", "missing") and row["etag"]:
-        return row["etag"]
-    return None
 
 
 def fetch_readmes(db_path, token: str, fetch, sleep, now) -> None:
@@ -49,7 +25,7 @@ def fetch_readmes(db_path, token: str, fetch, sleep, now) -> None:
             "https://api.github.com/repos/"
             f"{quote(owner, safe='')}/{quote(repo, safe='')}/readme"
         )
-        headers = _readme_headers(token, _conditional_etag(row))
+        headers = _readme_headers(token, row["etag"] if row["readme_state"] in ("present", "missing") and row["etag"] else None)
         response = _fetch_with_retries(url, headers, fetch, sleep, now)
         _apply_readme(db_path, row["id"], response)
         _wait_if_exhausted(response, sleep, now)
@@ -63,7 +39,7 @@ def _fetch_with_retries(url, headers, fetch, sleep, now):
         except Exception:
             response = None
         if response is not None and response.status == 401:
-            raise AuthError("GitHub rejected the token")
+            raise Exception("GitHub rejected the token")
         if response is not None and response.status in (200, 304, 404):
             return response
         last = response
@@ -78,7 +54,7 @@ def _sleep_before_retry(response, sleep, now) -> None:
         sleep(SHORT_WAIT_SECONDS)
         return
     if response.status in (403, 429):
-        retry_after = _header(response.headers, "retry-after")
+        retry_after = header(response, "retry-after")
         if retry_after is not None:
             try:
                 sleep(float(retry_after))
@@ -95,10 +71,10 @@ def _sleep_before_retry(response, sleep, now) -> None:
 def _wait_if_exhausted(response, sleep, now) -> bool:
     if response is None or now is None:
         return False
-    remaining = _header(response.headers, "x-ratelimit-remaining")
+    remaining = header(response, "x-ratelimit-remaining")
     if remaining != "0":
         return False
-    reset = _header(response.headers, "x-ratelimit-reset")
+    reset = header(response, "x-ratelimit-reset")
     if reset is None:
         return False
     sleep(max(0, int(reset) - int(now())))
@@ -117,7 +93,7 @@ def _apply_readme(db_path, repo_id: int, response) -> None:
     record_readme(
         db_path,
         repo_id,
-        text=_text(response.body),
+        text=text(response),
         state="present",
-        etag=_header(response.headers, "etag"),
+        etag=header(response, "etag"),
     )

@@ -26,8 +26,6 @@ repos = Table(
     Column("readme_state", Text, nullable=False),
     Column("etag", Text),
 )
-
-
 _engines = {}
 
 
