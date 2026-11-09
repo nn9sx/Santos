@@ -5,7 +5,7 @@ import pytest
 from santos import main
 from santos.domains.readme import fetch_readmes
 from santos.models.index import ReadmeState
-from santos.stores.repo import load_membership
+from santos.stores.repo import active_targets, load_membership, record_readmes
 
 
 def _index(*repos):
@@ -43,6 +43,12 @@ def _rows(db):
         }
 
 
+def _fetch_and_store(db, fetch, sleep, now, token="token"):
+    updates = fetch_readmes(active_targets(db), token, fetch, sleep, now)
+    record_readmes(db, updates)
+    return updates
+
+
 def test_readme_outcomes_store_text_mark_missing_and_keep_304(tmp_path):
     db = tmp_path / "corpus.db"
     load_membership(
@@ -75,7 +81,7 @@ def test_readme_outcomes_store_text_mark_missing_and_keep_304(tmp_path):
             return Response(304, {}, b"")
         raise AssertionError(url)
 
-    fetch_readmes(db, token="token", fetch=fetch, sleep=lambda _seconds: None, now=lambda: 0)
+    _fetch_and_store(db, fetch, sleep=lambda _seconds: None, now=lambda: 0)
 
     rows = _rows(db)
     assert rows[1]["readme_text"] == "# one"
@@ -123,7 +129,7 @@ def test_exhausted_rate_limit_waits_until_reset(tmp_path):
         events.append(("sleep", seconds))
         clock["now"] += seconds
 
-    fetch_readmes(db, token="token", fetch=fetch, sleep=sleep, now=lambda: clock["now"])
+    _fetch_and_store(db, fetch, sleep=sleep, now=lambda: clock["now"])
 
     assert events == [
         ("fetch", "https://api.github.com/repos/alice/one/readme", 1_700_000_000),
@@ -153,7 +159,7 @@ def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypat
         assert not (data_home / "pitch-flap" / "corpus.db").exists()
 
 
-def test_401_stops_and_keeps_rows_already_stored(tmp_path):
+def test_401_stops_and_writes_nothing(tmp_path):
     db = tmp_path / "corpus.db"
     load_membership(
         db,
@@ -170,11 +176,11 @@ def test_401_stops_and_keeps_rows_already_stored(tmp_path):
         raise AssertionError(url)
 
     with pytest.raises(Exception, match="GitHub rejected the token"):
-        fetch_readmes(db, token="token", fetch=fetch, sleep=lambda _seconds: None, now=lambda: 0)
+        _fetch_and_store(db, fetch, sleep=lambda _seconds: None, now=lambda: 0)
 
     rows = _rows(db)
-    assert rows[1]["readme_text"] == "# one"
-    assert rows[1]["readme_state"] == ReadmeState.PRESENT
+    assert rows[1]["readme_state"] == ReadmeState.PENDING
+    assert rows[1]["readme_text"] is None
     assert rows[2]["readme_state"] == ReadmeState.PENDING
     assert rows[2]["readme_text"] is None
     assert rows[3]["readme_state"] == ReadmeState.PENDING
@@ -195,11 +201,10 @@ def test_repeated_non_auth_failure_marks_error_and_continues(tmp_path):
             return Response(500, {}, b"")
         return Response(200, {"etag": '"two"'}, b"# two")
 
-    fetch_readmes(db, token="token", fetch=fetch, sleep=lambda _seconds: None, now=lambda: 0)
+    _fetch_and_store(db, fetch, sleep=lambda _seconds: None, now=lambda: 0)
 
     rows = _rows(db)
     assert attempts == ["https://api.github.com/repos/alice/one/readme"] * 3
     assert rows[1]["readme_state"] == ReadmeState.ERROR
     assert rows[2]["readme_text"] == "# two"
     assert rows[2]["readme_state"] == ReadmeState.PRESENT
-

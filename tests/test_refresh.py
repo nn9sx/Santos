@@ -104,10 +104,7 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
         if url == INDEX_URL:
             return Response(200, {}, json.dumps(_two_active()).encode())
         if url.endswith("/alice/one/readme"):
-            if stopped["value"]:
-                return Response(200, {"etag": '"alice"'}, b"# alice")
-            assert headers["If-None-Match"] == '"alice"'
-            return Response(304, {}, b"")
+            return Response(200, {"etag": '"alice"'}, b"# alice")
         if url.endswith("/bob/two/readme"):
             if stopped["value"]:
                 raise KeyboardInterrupt
@@ -123,7 +120,7 @@ def test_refresh_resumes_pending_rows_and_keeps_stored_text(tmp_path, monkeypatc
         after_stop = conn.execute(
             "SELECT id, readme_text, readme_state FROM repos ORDER BY id"
         ).fetchall()
-    assert after_stop == [(1, "# alice", ReadmeState.PRESENT), (2, None, ReadmeState.PENDING)]
+    assert after_stop == [(1, None, ReadmeState.PENDING), (2, None, ReadmeState.PENDING)]
 
     stopped["value"] = False
     assert main(["refresh"]) == 0

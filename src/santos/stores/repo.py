@@ -79,28 +79,22 @@ def active_targets(db_path: Path) -> list[Repo]:
         return [_stored(row) for row in conn.execute(stmt).mappings()]
 
 
-def record_readme(
-    db_path: Path,
-    repo_id: int,
-    *,
-    text: str | None,
-    state: ReadmeState,
-    etag: str | None,
-) -> None:
+def record_readmes(db_path: Path, updates) -> None:
     with engine(db_path).begin() as conn:
-        conn.execute(
-            update(repos)
-            .where(repos.c.id == repo_id)
-            .values({
-                repos.c.readme_text: text,
-                repos.c.readme_state: state,
-                repos.c.etag: etag,
-            })
-        )
-
-
-def mark_readme_error(db_path: Path, repo_id: int) -> None:
-    with engine(db_path).begin() as conn:
-        conn.execute(
-            update(repos).where(repos.c.id == repo_id).values({repos.c.readme_state: ReadmeState.ERROR})
-        )
+        for readme in updates:
+            if readme.state == ReadmeState.ERROR:
+                conn.execute(
+                    update(repos)
+                    .where(repos.c.id == readme.id)
+                    .values({repos.c.readme_state: ReadmeState.ERROR})
+                )
+            else:
+                conn.execute(
+                    update(repos)
+                    .where(repos.c.id == readme.id)
+                    .values({
+                        repos.c.readme_text: readme.text,
+                        repos.c.readme_state: readme.state,
+                        repos.c.etag: readme.etag,
+                    })
+                )

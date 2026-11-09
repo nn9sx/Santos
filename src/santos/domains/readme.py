@@ -1,11 +1,19 @@
+from dataclasses import dataclass
 from urllib.parse import quote
 
 from santos.clients.http import header, text
-from santos.models.index import ReadmeState
-from santos.stores.repo import active_targets, mark_readme_error, record_readme
+from santos.models.index import ReadmeState, Repo
 
 README_ATTEMPTS = 3
 SHORT_WAIT_SECONDS = 1
+
+
+@dataclass(frozen=True)
+class Readme:
+    id: int
+    state: ReadmeState
+    text: str | None = None
+    etag: str | None = None
 
 
 def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
@@ -19,14 +27,17 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
     return headers
 
 
-def fetch_readmes(db_path, token: str, fetch, sleep, now) -> None:
-    for row in active_targets(db_path):
+def fetch_readmes(targets: list[Repo], token: str, fetch, sleep, now) -> list[Readme]:
+    updates: list[Readme] = []
+    for row in targets:
         owner, repo = row.full_name.split("/", 1)
         url = ("https://api.github.com/repos/"f"{quote(owner, safe='')}/{quote(repo, safe='')}/readme")
         headers = _readme_headers(token, row.etag if row.readme_state in (ReadmeState.PRESENT, ReadmeState.MISSING) and row.etag else None)
         response = _fetch_with_retries(url, headers, fetch, sleep, now)
-        _apply_readme(db_path, row.id, response)
+        update = _readme_update(row.id, response)
+        if update is not None: updates.append(update)
         _wait_if_exhausted(response, sleep, now)
+    return updates
 
 
 def _fetch_with_retries(url, headers, fetch, sleep, now):
@@ -71,18 +82,15 @@ def _wait_if_exhausted(response, sleep, now) -> bool:
     return True
 
 
-def _apply_readme(db_path, repo_id: int, response) -> None:
+def _readme_update(repo_id: int, response) -> Readme | None:
     if response is None or response.status not in (200, 304, 404):
-        mark_readme_error(db_path, repo_id)
-        return
-    if response.status == 304: return
+        return Readme(id=repo_id, state=ReadmeState.ERROR)
+    if response.status == 304: return None
     if response.status == 404:
-        record_readme(db_path, repo_id, text=None, state=ReadmeState.MISSING, etag=None)
-        return
-    record_readme(
-        db_path,
-        repo_id,
-        text=text(response),
+        return Readme(id=repo_id, state=ReadmeState.MISSING, text=None, etag=None)
+    return Readme(
+        id=repo_id,
         state=ReadmeState.PRESENT,
+        text=text(response),
         etag=header(response, "etag"),
     )
