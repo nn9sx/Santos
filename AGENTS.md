@@ -4,7 +4,9 @@ This repo is greenfield. Product facts below are decided. Use them. Ask Andres o
 
 ## Product
 
-Santos is a CLI that pitches a new project idea grounded in neighboring GitHub READMEs, and names those repos in the pitch.
+The repo and project stay Santos. The product and CLI are pitch-flap.
+
+pitch-flap pitches a new project idea grounded in neighboring GitHub READMEs, and names those repos in the pitch.
 
 The user rates pitches. A rating changes the Gaussian noise used on the next run.
 
@@ -19,7 +21,7 @@ Modes are flags. `pull` is the default.
 
 Stack: Python, SQLite, Hugging Face `nomic-ai/nomic-embed-text-v1.5`.
 
-The corpus is local: READMEs for about 1–10k repos. GitHub Search runs while building that index and again on refresh (a command or a schedule). Pace searches at most 25 requests per minute and honor rate-limit headers.
+The corpus is local: READMEs for about 1–10k repos. Corpus membership is a download of `https://www.gitstarclub.com/search-index`. README fetches honor GitHub core rate-limit headers. GitHub Search stays at most 25 requests per minute and honors rate-limit headers.
 
 Render a template pitch by default. `--expand` may call Ollama or OpenAI and stays off unless the user passes it.
 
@@ -45,6 +47,15 @@ Leave `normalize_embeddings=True` off. That flag L2-normalizes the vector from b
 Add Gaussian noise in the stored 768-d space. Where the noise is centered depends on the mode. Find neighbors with Euclidean distance, so a length change from the noise counts. L2-normalize only if a later mode explicitly wants direction-only comparison.
 
 Switching models means re-embedding the corpus. Vectors from another model are not in this space, and the noise scale does not transfer.
+
+## Working style
+
+1. Put code in packages by role, not by when it was written. Current roles: `cli`, `clients`, `domains`, `models`, `stores`.
+2. A type lives next to the job it serves. The same name used for different jobs across layers is a smell.
+3. Protect product vocabulary. Do not reuse a term that already means something else in the system (for example, a point is the 768-d vector).
+4. Prefer explicit package constants and owned types over reading env or config ad hoc, or stringly-typed glue.
+5. Design the layout for what comes next (embeddings, pitches), not only for the current feature.
+6. When coding alongside an agent, Andres's refactor is the source of truth. Repair and continue from it; do not rewind it.
 
 ## Building
 
