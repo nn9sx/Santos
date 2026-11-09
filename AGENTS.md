@@ -48,6 +48,15 @@ Add Gaussian noise in the stored 768-d space. Where the noise is centered depend
 
 Switching models means re-embedding the corpus. Vectors from another model are not in this space, and the noise scale does not transfer.
 
+## Working style
+
+1. Put code in packages by role, not by when it was written. Current roles: `cli`, `clients`, `domains`, `models`, `stores`.
+2. A type lives next to the job it serves. The same name used for different jobs across layers is a smell.
+3. Protect product vocabulary. Do not reuse a term that already means something else in the system (for example, a point is the 768-d vector).
+4. Prefer explicit package constants and owned types over reading env or config ad hoc, or stringly-typed glue.
+5. Design the layout for what comes next (embeddings, pitches), not only for the current feature.
+6. When coding alongside an agent, Andres's refactor is the source of truth. Repair and continue from it; do not rewind it.
+
 ## Building
 
 Follow TDD: test, code, refactor (red, green, blue).
