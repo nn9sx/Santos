@@ -186,13 +186,18 @@ def test_refresh_requires_positive_limit(tmp_path, monkeypatch, capsys):
         lambda *args, **kwargs: calls.append((args, kwargs)),
     )
 
-    for argv in (["refresh"], ["refresh", "--limit", "0"], ["refresh", "--limit", "-1"]):
+    code = main(["refresh"])
+    assert code != 0
+    assert calls == []
+    assert "--limit flag must be given" in capsys.readouterr().err
+    assert not (tmp_path / "pitch-flap" / "corpus.db").exists()
+
+    for argv in (["refresh", "--limit", "0"], ["refresh", "--limit", "-1"]):
         calls.clear()
         code = main(argv)
         assert code != 0
         assert calls == []
-        captured = capsys.readouterr()
-        assert "limit" in captured.err.lower()
+        assert "--limit must be a positive integer" in capsys.readouterr().err
         assert not (tmp_path / "pitch-flap" / "corpus.db").exists()
 
 

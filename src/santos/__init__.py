@@ -23,8 +23,11 @@ def main(argv: list[str] | None = None) -> int:
     COMMANDS = {"refresh": Refresh}
     if args.command not in COMMANDS: parser.error(f"unknown command {args.command}")
     try:
-        if args.command == "refresh" and (args.limit is None or args.limit < 1):
-            raise ValueError("--limit must be a positive integer")
+        if args.command == "refresh":
+            if args.limit is None:
+                raise ValueError("--limit flag must be given")
+            if args.limit < 1:
+                raise ValueError("--limit must be a positive integer")
         COMMANDS[args.command](
             db_path=(Path(XDG_DATA_HOME) if XDG_DATA_HOME else Path.home() / ".local" / "share") / CLI_NAME / "corpus.db",
             fetch=http_fetch,
