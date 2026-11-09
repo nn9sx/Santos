@@ -15,7 +15,8 @@ from sqlalchemy import (
 from types import NoneType, UnionType
 from typing import Annotated, Union, get_args, get_origin
 
-from santos.models.index import ReadmeState, Repo
+from santos.domains.readme import ReadmeState
+from santos.models.index import Repo
 
 metadata = MetaData()
 

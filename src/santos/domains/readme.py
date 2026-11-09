@@ -1,11 +1,20 @@
 from dataclasses import dataclass
+from enum import StrEnum
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 from santos.clients.http import header, text
-from santos.models.index import ReadmeState, Repo
+if TYPE_CHECKING: from santos.models.index import Repo
 
 README_ATTEMPTS = 3
 SHORT_WAIT_SECONDS = 1
+
+
+class ReadmeState(StrEnum):
+    PENDING = "pending"
+    PRESENT = "present"
+    MISSING = "missing"
+    ERROR = "error"
 
 
 @dataclass(frozen=True)
@@ -27,7 +36,7 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
     return headers
 
 
-def fetch_readmes(targets: list[Repo], token: str, fetch, sleep, now) -> list[Readme]:
+def fetch_readmes(targets: list["Repo"], token: str, fetch, sleep, now) -> list[Readme]:
     updates: list[Readme] = []
     for row in targets:
         owner, repo = row.full_name.split("/", 1)

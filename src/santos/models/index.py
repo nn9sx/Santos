@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import date
-from enum import StrEnum
 from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, field_validator
 from pydantic.dataclasses import dataclass as checked
 from typing import Annotated, ClassVar
+
+from santos.domains.readme import ReadmeState
 
 
 class IndexDownloadError(Exception):
@@ -11,7 +12,7 @@ class IndexDownloadError(Exception):
 
 
 @checked(frozen=True, config=ConfigDict(extra="ignore"))
-class Stub:
+class RepoStub:
     id: Annotated[int, Field(strict=True)]
     full_name: Annotated[str, Field(strict=True)]
     owner: Annotated[str, Field(strict=True)] | None = None
@@ -39,25 +40,18 @@ class Stub:
         return value
 
 
-class ReadmeState(StrEnum):
-    PENDING = "pending"
-    PRESENT = "present"
-    MISSING = "missing"
-    ERROR = "error"
-
-
 @dataclass(frozen=True)
-class Repo(Stub):
+class Repo(RepoStub):
     table_name: ClassVar[str] = "repos"
     active: bool = False
     readme_text: str | None = None
     readme_state: ReadmeState = ReadmeState.PENDING
     etag: str | None = None
 
-_stub = TypeAdapter(Stub)
+_stub = TypeAdapter(RepoStub)
 
 
-def active_repos(document: object) -> list[Stub]:
+def active_repos(document: object) -> list[RepoStub]:
     if not isinstance(document, dict): raise IndexDownloadError("search index is not an object")
     repos = document.get("repos")
     count = document.get("count")
@@ -67,7 +61,7 @@ def active_repos(document: object) -> list[Stub]:
         or not isinstance(count, int)
         or count != len(repos)
     ): raise IndexDownloadError("count does not match repos")
-    active: list[Stub] = []
+    active: list[RepoStub] = []
     for repo in repos:
         if not isinstance(repo, dict): raise IndexDownloadError("repo is not an object")
         if repo.get("active") is not True: continue

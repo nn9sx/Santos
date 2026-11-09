@@ -4,7 +4,7 @@ import pytest
 
 from santos import main
 from santos.domains.readme import fetch_readmes
-from santos.models.index import ReadmeState
+from santos.domains.readme import ReadmeState
 from santos.stores.repo import active_targets, load_membership, record_readmes
 
 
