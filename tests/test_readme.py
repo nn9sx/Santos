@@ -5,7 +5,7 @@ import pytest
 from santos import main
 from santos.domains.readme import fetch_readmes
 from santos.domains.readme import ReadmeState
-from santos.stores.repo import active_targets, load_membership, record_readmes
+from santos.stores.repo import active_targets, load_membership, record_readme
 
 
 def _index(*repos):
@@ -43,10 +43,9 @@ def _rows(db):
         }
 
 
-def _fetch_and_store(db, fetch, sleep, now, token="token"):
-    updates = fetch_readmes(active_targets(db), token, fetch, sleep, now)
-    record_readmes(db, updates)
-    return updates
+def _fetch_and_store(db, fetch, sleep, now, token="token", limit=100):
+    for readme in fetch_readmes(active_targets(db, limit), token, fetch, sleep, now):
+        record_readme(db, readme)
 
 
 def test_readme_outcomes_store_text_mark_missing_and_keep_304(tmp_path):
@@ -151,7 +150,7 @@ def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypat
     for token in (None, ""):
         calls.clear()
         monkeypatch.setattr("santos.cli.refresh.GITHUB_TOKEN", "")
-        code = main(["refresh"])
+        code = main(["refresh", "--limit", "1"])
         assert code != 0
         assert calls == []
         captured = capsys.readouterr()
@@ -159,7 +158,7 @@ def test_unset_token_fetches_nothing_and_reports_requirement(tmp_path, monkeypat
         assert not (data_home / "pitch-flap" / "corpus.db").exists()
 
 
-def test_401_stops_and_writes_nothing(tmp_path):
+def test_401_stops_and_keeps_rows_already_stored(tmp_path):
     db = tmp_path / "corpus.db"
     load_membership(
         db,
@@ -179,8 +178,8 @@ def test_401_stops_and_writes_nothing(tmp_path):
         _fetch_and_store(db, fetch, sleep=lambda _seconds: None, now=lambda: 0)
 
     rows = _rows(db)
-    assert rows[1]["readme_state"] == ReadmeState.PENDING
-    assert rows[1]["readme_text"] is None
+    assert rows[1]["readme_text"] == "# one"
+    assert rows[1]["readme_state"] == ReadmeState.PRESENT
     assert rows[2]["readme_state"] == ReadmeState.PENDING
     assert rows[2]["readme_text"] is None
     assert rows[3]["readme_state"] == ReadmeState.PENDING

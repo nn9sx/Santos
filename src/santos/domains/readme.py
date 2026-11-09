@@ -36,17 +36,15 @@ def _readme_headers(token: str, etag: str | None) -> dict[str, str]:
     return headers
 
 
-def fetch_readmes(targets: list["Repo"], token: str, fetch, sleep, now) -> list[Readme]:
-    updates: list[Readme] = []
+def fetch_readmes(targets: list["Repo"], token: str, fetch, sleep, now):
     for row in targets:
         owner, repo = row.full_name.split("/", 1)
         url = ("https://api.github.com/repos/"f"{quote(owner, safe='')}/{quote(repo, safe='')}/readme")
         headers = _readme_headers(token, row.etag if row.readme_state in (ReadmeState.PRESENT, ReadmeState.MISSING) and row.etag else None)
         response = _fetch_with_retries(url, headers, fetch, sleep, now)
         update = _readme_update(row.id, response)
-        if update is not None: updates.append(update)
+        if update is not None: yield update
         _wait_if_exhausted(response, sleep, now)
-    return updates
 
 
 def _fetch_with_retries(url, headers, fetch, sleep, now):

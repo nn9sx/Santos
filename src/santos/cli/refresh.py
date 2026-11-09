@@ -5,17 +5,18 @@ from http import HTTPStatus
 from santos import GITHUB_TOKEN
 from santos.cli.command import Command
 from santos.domains.readme import fetch_readmes
-from santos.stores.repo import active_targets, load_membership, record_readmes
+from santos.stores.repo import active_targets, load_membership, record_readme
 
 INDEX_URL = "https://www.gitstarclub.com/search-index"
 
 
 class Refresh(Command):
-    def __init__(self, *, db_path, fetch, sleep=None, now=None) -> None:
+    def __init__(self, *, db_path, fetch, limit: int, sleep=None, now=None) -> None:
         self.token = GITHUB_TOKEN.strip()
         if not self.token: raise ValueError("GITHUB_TOKEN is required")
         self.db_path = db_path
         self.fetch = fetch
+        self.limit = limit
         self.sleep = time.sleep if sleep is None else sleep
         self.now = time.time if now is None else now
 
@@ -30,11 +31,11 @@ class Refresh(Command):
         except Exception as exc:
             raise Exception("search index download failed") from exc
         load_membership(self.db_path, document)
-        updates = fetch_readmes(
-            active_targets(self.db_path),
+        for readme in fetch_readmes(
+            active_targets(self.db_path, self.limit),
             self.token,
             self.fetch,
             self.sleep,
             self.now,
-        )
-        record_readmes(self.db_path, updates)
+        ):
+            record_readme(self.db_path, readme)

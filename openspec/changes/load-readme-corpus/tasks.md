@@ -29,3 +29,10 @@
 ## 6. Integration
 
 - [x] 6.1 Run the full test suite and verify it exits 0.
+
+## 7. Bounded refresh
+
+- [x] 7.1 Write a failing test that `pitch-flap refresh` without `--limit`, or with a non-positive `--limit`, exits non-zero, leaves the store unchanged, and performs no index or README fetch. Implement that guard, then verify the test passes.
+- [x] 7.2 Write a failing test that `pitch-flap refresh --limit N` updates membership for every active index row and fetches at most `N` README targets in order pending, then error, then present/missing, by ascending id within each group. Implement that selection, then verify the test passes.
+- [x] 7.3 Write a failing test that each README result is committed before the next fetch so a mid-pass stop keeps text already stored, and that a `401` keeps rows already written. Implement that persistence, then verify the test passes.
+- [x] 7.4 Wire `--limit` through the refresh CLI and update existing refresh tests to pass a valid `--limit`. Run the full test suite and verify it exits 0.

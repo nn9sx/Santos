@@ -18,13 +18,17 @@ from santos.clients.http import http_fetch
 def main(argv: list[str] | None = None) -> int:
     parser = ArgumentParser(prog=CLI_NAME)
     parser.add_argument("command")
+    parser.add_argument("--limit", type=int, default=None)
     args = parser.parse_args(argv)
-    COMMANDS = { "refresh": Refresh }
+    COMMANDS = {"refresh": Refresh}
     if args.command not in COMMANDS: parser.error(f"unknown command {args.command}")
     try:
+        if args.command == "refresh" and (args.limit is None or args.limit < 1):
+            raise ValueError("--limit must be a positive integer")
         COMMANDS[args.command](
             db_path=(Path(XDG_DATA_HOME) if XDG_DATA_HOME else Path.home() / ".local" / "share") / CLI_NAME / "corpus.db",
-            fetch=http_fetch
+            fetch=http_fetch,
+            limit=args.limit,
         )()
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)

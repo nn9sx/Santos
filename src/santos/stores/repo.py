@@ -70,32 +70,37 @@ def _stored(row) -> Repo:
     )
 
 
-def active_targets(db_path: Path) -> list[Repo]:
+def active_targets(db_path: Path, limit: int) -> list[Repo]:
+    state_order = case(
+        (repos.c.readme_state == ReadmeState.PENDING, 0),
+        (repos.c.readme_state == ReadmeState.ERROR, 1),
+        else_=2,
+    )
     stmt = (
         select(repos)
         .where(repos.c.active == True)
-        .order_by(repos.c.id)
+        .order_by(state_order, repos.c.id)
+        .limit(limit)
     )
     with engine(db_path).connect() as conn:
         return [_stored(row) for row in conn.execute(stmt).mappings()]
 
 
-def record_readmes(db_path: Path, updates) -> None:
+def record_readme(db_path: Path, readme) -> None:
     with engine(db_path).begin() as conn:
-        for readme in updates:
-            if readme.state == ReadmeState.ERROR:
-                conn.execute(
-                    update(repos)
-                    .where(repos.c.id == readme.id)
-                    .values({repos.c.readme_state: ReadmeState.ERROR})
-                )
-            else:
-                conn.execute(
-                    update(repos)
-                    .where(repos.c.id == readme.id)
-                    .values({
-                        repos.c.readme_text: readme.text,
-                        repos.c.readme_state: readme.state,
-                        repos.c.etag: readme.etag,
-                    })
-                )
+        if readme.state == ReadmeState.ERROR:
+            conn.execute(
+                update(repos)
+                .where(repos.c.id == readme.id)
+                .values({repos.c.readme_state: ReadmeState.ERROR})
+            )
+        else:
+            conn.execute(
+                update(repos)
+                .where(repos.c.id == readme.id)
+                .values({
+                    repos.c.readme_text: readme.text,
+                    repos.c.readme_state: readme.state,
+                    repos.c.etag: readme.etag,
+                })
+            )
